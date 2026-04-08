@@ -73,6 +73,9 @@ export default function GlobalVoiceAgent({
         })
       });
       const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Failed to connect to the server.");
+      }
       
       setPhase('speaking');
       const responseText = data.reply || "Okay, I've made the requested changes.";
@@ -115,10 +118,10 @@ export default function GlobalVoiceAgent({
         window.speechSynthesis.speak(utterance);
       }
 
-    } catch (e) {
+    } catch (e: any) {
       setPhase('speaking');
-      setReply("Sorry, I couldn't connect to the server.");
-      setTimeout(onClose, 2000);
+      setReply(e.message || "Sorry, I couldn't connect to the server.");
+      setTimeout(onClose, 4000);
     }
   };
 

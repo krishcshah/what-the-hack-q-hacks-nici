@@ -255,7 +255,7 @@ export const applyAdjustment = (categories: CartCategory[], adjustmentType: stri
               ...item,
               name: `Vegan ${baseName}`,
               price: item.price * 1.2,
-              image: key && IMAGES[key].vegan ? IMAGES[key].vegan : item.image,
+              image: key && (IMAGES[key] as any).vegan ? (IMAGES[key] as any).vegan : item.image,
               isVegan: true
             };
           }
@@ -265,21 +265,21 @@ export const applyAdjustment = (categories: CartCategory[], adjustmentType: stri
             ...item,
             name: `Generic ${baseName}`,
             price: item.price * 0.7,
-            image: key && IMAGES[key].generic ? IMAGES[key].generic : item.image,
+            image: key && (IMAGES[key] as any).generic ? (IMAGES[key] as any).generic : item.image,
           };
         case 'eco':
           return {
             ...item,
             name: `Local Eco ${baseName}`,
             price: item.price * 1.1,
-            image: key && IMAGES[key].eco ? IMAGES[key].eco : item.image,
+            image: key && (IMAGES[key] as any).eco ? (IMAGES[key] as any).eco : item.image,
           };
         case 'chef':
           return {
             ...item,
             name: `Premium ${baseName}`,
             price: item.price * 1.5,
-            image: key && IMAGES[key].chef ? IMAGES[key].chef : item.image,
+            image: key && (IMAGES[key] as any).chef ? (IMAGES[key] as any).chef : item.image,
           };
       }
       return item;

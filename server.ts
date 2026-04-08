@@ -22,7 +22,9 @@ async function startServer() {
       return res.status(500).json({ error: "OpenAI API key not configured. Please add it to your secrets." });
     }
     try {
-      const { message, cartSummary } = req.body;
+      const { message, cartState } = req.body;
+      const cartSummary = cartState ? cartState.categories.map((c: any) => c.items.map((i: any) => i.name).join(", ")).join(", ") : "empty";
+
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -62,7 +64,7 @@ IMPORTANT: If you call the adjust_cart tool, you MUST also provide a natural con
 
       if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
         const toolCall = responseMessage.tool_calls[0];
-        if (toolCall.function.name === "adjust_cart") {
+        if (toolCall.type === "function" && toolCall.function.name === "adjust_cart") {
           const args = JSON.parse(toolCall.function.arguments);
           action = args.adjustmentType;
           if (!reply) {
