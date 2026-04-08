@@ -1,0 +1,8 @@
+{
+  "name": "WTH: Picnic Agentic Shopping",
+  "description": "An agentic grocery ordering app with a zero-second checkout experience.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
