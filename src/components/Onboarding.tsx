@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { User, Calendar, CheckCircle2, ArrowRight, XCircle, Cat, Dog } from 'lucide-react';
 
 export default function Onboarding({ onComplete }: { onComplete: () => void }) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [diet, setDiet] = useState<string | null>(null);
   const [adults, setAdults] = useState(1);
   const [kids, setKids] = useState(0);
@@ -26,14 +26,55 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] flex flex-col relative overflow-hidden">
+      <AnimatePresence mode="wait">
+        {step === 0 && (
+          <motion.div 
+            key="step0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-[#f4a3b4] to-[#fdfdfd] cursor-pointer"
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            onDragEnd={(e, info) => {
+              if (info.offset.y < -50 || info.offset.y > 50) {
+                setStep(1);
+              }
+            }}
+            onClick={() => setStep(1)}
+          >
+            <div className="flex flex-col items-center justify-center flex-1">
+              <div className="w-28 h-28 bg-[#c00020] rounded-[2rem] flex items-center justify-center mb-6 shadow-sm">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="20" cy="22" r="4.5" fill="white"/>
+                  <circle cx="44" cy="22" r="4.5" fill="white"/>
+                  <path d="M16 34 C 16 54, 48 54, 48 34" stroke="white" strokeWidth="8" strokeLinecap="round"/>
+                </svg>
+              </div>
+              
+              <h1 className="text-4xl font-extrabold text-[#4a151b] mb-2 tracking-tight">
+                Hi, I'm <span className="text-[#c00020]">Nici</span>
+              </h1>
+              <p className="text-2xl text-[#4a151b] font-medium">I shop for you</p>
+            </div>
+            
+            <div className="pb-16 text-sm font-semibold tracking-widest text-[#4a151b]">
+              SWIPE TO GET STARTED
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Progress bar */}
-      <div className="h-1 bg-gray-200 w-full">
-        <motion.div 
-          className="h-full bg-red-500" 
-          initial={{ width: '25%' }}
-          animate={{ width: `${(step / 4) * 100}%` }}
-        />
-      </div>
+      {step > 0 && (
+        <div className="h-1 bg-gray-200 w-full">
+          <motion.div 
+            className="h-full bg-red-500" 
+            initial={{ width: '25%' }}
+            animate={{ width: `${(step / 4) * 100}%` }}
+          />
+        </div>
+      )}
 
       <div className="flex-1 p-6 flex flex-col justify-center max-w-md mx-auto w-full">
         <AnimatePresence mode="wait">

@@ -9,6 +9,7 @@ import HomeView from './components/HomeView';
 import CartView from './components/CartView';
 import Navigation from './components/Navigation';
 import InitialLoader from './components/InitialLoader';
+import WelcomeScreen from './components/WelcomeScreen';
 import AdjustmentLoader from './components/AdjustmentLoader';
 import GlobalVoiceAgent from './components/GlobalVoiceAgent';
 import CameraScanner from './components/CameraScanner';
@@ -22,7 +23,7 @@ export default function App() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
     return localStorage.getItem('onboardingComplete') === 'true';
   });
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [appPhase, setAppPhase] = useState<'loading' | 'welcome' | 'main'>('loading');
   const [currentTab, setCurrentTab] = useState('home');
   const [cartCategories, setCartCategories] = useState<CartCategory[]>(generateMockCart());
   
@@ -95,10 +96,16 @@ export default function App() {
   }
 
   return (
-    <div className="font-sans text-gray-900 antialiased selection:bg-red-100 selection:text-red-900 max-w-md mx-auto relative bg-white shadow-2xl min-h-screen">
-      {isInitialLoading && (
-        <InitialLoader cartState={cartState} onComplete={() => setIsInitialLoading(false)} />
+    <div className="font-sans text-gray-900 antialiased selection:bg-red-100 selection:text-red-900 max-w-md mx-auto relative bg-white shadow-2xl min-h-screen overflow-hidden">
+      {appPhase === 'loading' && (
+        <InitialLoader cartState={cartState} onComplete={() => setAppPhase('welcome')} />
       )}
+
+      <AnimatePresence>
+        {appPhase === 'welcome' && (
+          <WelcomeScreen onComplete={() => setAppPhase('main')} />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isVoiceActive && (
@@ -133,7 +140,7 @@ export default function App() {
         />
       )}
 
-      <div style={{ display: isAdjusting ? 'none' : 'block' }}>
+      <div style={{ display: isAdjusting || appPhase !== 'main' ? 'none' : 'block' }}>
         {currentTab === 'home' && (
           <HomeView 
             cartState={cartState} 
