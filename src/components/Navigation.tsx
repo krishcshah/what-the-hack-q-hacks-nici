@@ -1,12 +1,12 @@
-import { Home, Heart, BookOpen, Search, ShoppingBasket } from 'lucide-react';
+import { Home, Heart, BookOpen, TrendingUp, ShoppingBasket } from 'lucide-react';
 
 export default function Navigation({ currentTab, setTab }: { currentTab: string, setTab: (t: string) => void }) {
   const navItems = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'favorites', icon: Heart, label: 'Favorites' },
-    { id: 'recipes', icon: BookOpen, label: 'Recipes' },
-    { id: 'browse', icon: Search, label: 'Browse' },
-    { id: 'basket', icon: ShoppingBasket, label: 'Basket' },
+    { id: 'home', icon: Home, label: 'Home', tab: 'home' },
+    { id: 'favorites', icon: Heart, label: 'Favorites', tab: 'home' },
+    { id: 'recipes', icon: BookOpen, label: 'Recipes', tab: 'home' },
+    { id: 'pitch', icon: TrendingUp, label: 'Pitch', tab: 'pitch' },
+    { id: 'basket', icon: ShoppingBasket, label: 'Basket', tab: 'cart' },
   ];
 
   return (
@@ -14,11 +14,14 @@ export default function Navigation({ currentTab, setTab }: { currentTab: string,
       <div className="flex justify-around items-center h-16 max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = currentTab === item.id || (currentTab === 'cart' && item.id === 'basket');
+          const isActive =
+            currentTab === item.tab ||
+            (currentTab === 'cart' && item.id === 'basket') ||
+            (currentTab === 'pitch' && item.id === 'pitch');
           return (
             <button
               key={item.id}
-              onClick={() => setTab(item.id === 'basket' ? 'cart' : 'home')} // Only home and cart are really implemented
+              onClick={() => setTab(item.tab)}
               className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
                 isActive ? 'text-red-500' : 'text-gray-400 hover:text-gray-600'
               }`}

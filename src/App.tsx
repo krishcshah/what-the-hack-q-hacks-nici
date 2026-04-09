@@ -16,6 +16,7 @@ import CameraScanner from './components/CameraScanner';
 import MinOrderLoader from './components/MinOrderLoader';
 import HamburgerLoader from './components/HamburgerLoader';
 import Onboarding from './components/Onboarding';
+import InvestorPitchFlowchart from './components/InvestorPitchFlowchart';
 import { generateMockCart, applyAdjustment } from './data';
 import { CartState, CartCategory } from './types';
 
@@ -154,6 +155,9 @@ export default function App() {
             onAdjust={handleAdjust} 
             onMicClick={() => setIsVoiceActive(true)}
           />
+        )}
+        {currentTab === 'pitch' && (
+          <InvestorPitchFlowchart />
         )}
         
         <Navigation currentTab={currentTab} setTab={setCurrentTab} />
