@@ -14,10 +14,7 @@ export default function Navigation({ currentTab, setTab }: { currentTab: string,
       <div className="flex justify-around items-center h-16 max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            currentTab === item.tab ||
-            (currentTab === 'cart' && item.id === 'basket') ||
-            (currentTab === 'pitch' && item.id === 'pitch');
+          const isActive = currentTab === item.tab;
           return (
             <button
               key={item.id}

@@ -167,7 +167,7 @@ export default function InvestorPitchFlowchart() {
     {
       id: 'onboard',
       label: '1 · Smart Onboarding',
-      sublabel: 'User sets household size, dietary preferences (Vegan / Omni / Vegetarian), and links calendar.',
+      sublabel: 'User sets household size, dietary preferences (Vegan/Omni/Vegetarian), and links calendar.',
       color: 'bg-indigo-50',
       textColor: 'text-indigo-800',
       borderColor: 'border-indigo-300',
@@ -197,7 +197,7 @@ export default function InvestorPitchFlowchart() {
       sublabel: 'Users see time saved, money saved & CO₂ reduced after every order.',
       bullets: [
         '⏱ Avg. 2 hrs saved per week',
-        '💸 Up to 20 % cost reduction',
+        '💸 Up to 20% cost reduction',
         '🌱 Lower carbon footprint',
       ],
       color: 'bg-emerald-50',
