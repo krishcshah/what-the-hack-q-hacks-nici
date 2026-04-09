@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { PackagePlus, CheckCircle2, History } from 'lucide-react';
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { PackagePlus, CheckCircle2, History } from "lucide-react";
 
 export default function MinOrderLoader({ onComplete }: { onComplete: () => void }) {
-  const [phase, setPhase] = useState<'analyzing' | 'adding' | 'done'>('analyzing');
+  const [phase, setPhase] = useState<"analyzing" | "adding" | "done">("analyzing");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('adding'), 2000);
-    const t2 = setTimeout(() => setPhase('done'), 4000);
+    const t1 = setTimeout(() => setPhase("adding"), 2000);
+    const t2 = setTimeout(() => setPhase("done"), 4000);
     const t3 = setTimeout(onComplete, 6000);
 
     return () => {
@@ -21,7 +23,7 @@ export default function MinOrderLoader({ onComplete }: { onComplete: () => void 
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-[32px] w-full max-w-sm p-8 shadow-2xl text-center relative overflow-hidden">
         <AnimatePresence mode="wait">
-          {phase === 'analyzing' && (
+          {phase === "analyzing" && (
             <motion.div key="analyzing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -20 }}>
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <History className="text-blue-500 animate-spin-slow" size={40} />
@@ -31,11 +33,11 @@ export default function MinOrderLoader({ onComplete }: { onComplete: () => void 
             </motion.div>
           )}
 
-          {phase === 'adding' && (
+          {phase === "adding" && (
             <motion.div key="adding" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 relative">
                 <PackagePlus className="text-yellow-500" size={40} />
-                <motion.div 
+                <motion.div
                   className="absolute inset-0 border-4 border-yellow-400 rounded-full border-t-transparent"
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
@@ -46,7 +48,7 @@ export default function MinOrderLoader({ onComplete }: { onComplete: () => void 
             </motion.div>
           )}
 
-          {phase === 'done' && (
+          {phase === "done" && (
             <motion.div key="done" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}>
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="text-green-500" size={40} />
