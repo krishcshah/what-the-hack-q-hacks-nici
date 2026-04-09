@@ -13,7 +13,7 @@ import {
   searchCatalog,
 } from "@/lib/data";
 import { type CartCategory, type CartState, type DeliverySlot } from "@/lib/types";
-import type { ElevenLabsClientTools } from "@/lib/elevenlabs-session";
+import { requestMicrophoneAccess, type ElevenLabsClientTools } from "@/lib/elevenlabs-session";
 import InitialLoader from "./InitialLoader";
 import GlobalVoiceAgent from "./GlobalVoiceAgent";
 import CameraScanner from "./CameraScanner";
@@ -41,6 +41,7 @@ interface CartContextValue {
   openHomeVoice: () => void;
   closeHomeVoice: () => void;
   isHomeVoiceActive: boolean;
+  voiceError: string | null;
   messages: ChatMessage[];
   setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
 }
@@ -73,7 +74,32 @@ export default function CartProvider({ children }: { children: ReactNode }) {
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [isHomeVoiceActive, setIsHomeVoiceActive] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+
+  const openVoice = useCallback(() => {
+    setVoiceError(null);
+    void requestMicrophoneAccess()
+      .then(() => {
+        setIsVoiceActive(true);
+      })
+      .catch((error) => {
+        console.error("Microphone access failed before opening cart voice:", error);
+        setVoiceError("Microphone access is blocked. Enable microphone permission for this site and try again.");
+      });
+  }, []);
+
+  const openHomeVoice = useCallback(() => {
+    setVoiceError(null);
+    void requestMicrophoneAccess()
+      .then(() => {
+        setIsHomeVoiceActive(true);
+      })
+      .catch((error) => {
+        console.error("Microphone access failed before opening onboarding voice:", error);
+        setVoiceError("Microphone access is blocked. Enable microphone permission for this site and try again.");
+      });
+  }, []);
 
   const cartState = useMemo<CartState>(() => {
     const { totalPrice, itemCount } = calculateCartTotals(cartCategories);
@@ -241,11 +267,18 @@ export default function CartProvider({ children }: { children: ReactNode }) {
         voiceAgentContext,
         voiceClientTools,
         isVoiceActive,
-        openVoice: () => setIsVoiceActive(true),
-        closeVoice: () => setIsVoiceActive(false),
-        openHomeVoice: () => setIsHomeVoiceActive(true),
-        closeHomeVoice: () => setIsHomeVoiceActive(false),
+        openVoice,
+        closeVoice: () => {
+          setVoiceError(null);
+          setIsVoiceActive(false);
+        },
+        openHomeVoice,
+        closeHomeVoice: () => {
+          setVoiceError(null);
+          setIsHomeVoiceActive(false);
+        },
         isHomeVoiceActive,
+        voiceError,
         messages,
         setMessages,
       }}

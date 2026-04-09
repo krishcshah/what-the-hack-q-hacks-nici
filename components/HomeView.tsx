@@ -42,10 +42,12 @@ export default function HomeView({
   cartState,
   onGoToCart,
   onMicClick,
+  voiceError,
 }: {
   cartState: CartState;
   onGoToCart: () => void;
   onMicClick: () => void;
+  voiceError: string | null;
 }) {
   const allItems = cartState.categories.flatMap((category) => category.items);
   const heroImages = allItems.slice(0, 3).map((item) => ({ src: item.image, alt: item.name }));
@@ -80,7 +82,6 @@ export default function HomeView({
             <div className="rounded-[24px] bg-[#f9dbe3]" />
             <HeroTile src={heroImages[2].src} alt={heroImages[2].alt} className="h-full" />
           </div>
-
           <div className="relative -mt-8 flex justify-center">
             <NiciMark />
           </div>
@@ -91,6 +92,12 @@ export default function HomeView({
               how can I help with your order?
             </h1>
           </div>
+
+          {voiceError && (
+            <div className="relative mx-auto mt-4 max-w-sm rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-700 shadow-sm">
+              {voiceError}
+            </div>
+          )}
 
           <div className="relative mt-6 flex items-center justify-center gap-3">
             <motion.button

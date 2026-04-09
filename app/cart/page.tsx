@@ -4,7 +4,7 @@ import CartView from "@/components/CartView";
 import { useCart } from "@/components/CartProvider";
 
 export default function CartPage() {
-  const { cartState, handleAdjust, openVoice, closeVoice, isVoiceActive, removeProductFromCart } = useCart();
+  const { cartState, handleAdjust, openVoice, closeVoice, isVoiceActive, removeProductFromCart, voiceError } = useCart();
   return (
     <CartView
       cartState={cartState}
@@ -13,6 +13,7 @@ export default function CartPage() {
       onMicClose={closeVoice}
       isVoiceActive={isVoiceActive}
       onRemoveProduct={removeProductFromCart}
+      voiceError={voiceError}
     />
   );
 }
