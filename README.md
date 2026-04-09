@@ -61,6 +61,14 @@ Nici is an agentic grocery ordering application designed to provide a frictionle
 * `/public`: Static assets including images and logos.
 * `server.ts`: The main Express server setup that serves both the API and the Vite frontend.
 
+## Contributors 
+
+* Krish Shah
+* Benedict Seuß
+* Anshul Srivastava
+* Ekansh Agarwal
+* Yash Raj
+
 ## License
 
 This project is licensed under the MIT License.
