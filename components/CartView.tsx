@@ -16,6 +16,7 @@ export default function CartView({
   onMicClose,
   isVoiceActive,
   onRemoveProduct,
+  voiceError,
 }: {
   cartState: CartState;
   onAdjust: (type: string) => void;
@@ -23,6 +24,7 @@ export default function CartView({
   onMicClose: () => void;
   isVoiceActive: boolean;
   onRemoveProduct: (productId: string) => void;
+  voiceError: string | null;
 }) {
   const [isAdjustExpanded, setIsAdjustExpanded] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
@@ -105,6 +107,12 @@ export default function CartView({
         <h1 className="text-lg font-semibold text-[#222]">Shopping Cart</h1>
         <div className="w-10" />
       </header>
+
+      {voiceError && (
+        <div className="mb-5 rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
+          {voiceError}
+        </div>
+      )}
 
       <section className="mb-10 rounded-[20px] border border-[#d9d9d9] bg-white px-6 py-5 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">

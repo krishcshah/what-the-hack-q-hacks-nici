@@ -1,16 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { ConversationProvider } from "@elevenlabs/react";
 import { motion } from "motion/react";
 import { Mic, MicOff, X } from "lucide-react";
-import type { VoiceConversation } from "@elevenlabs/client";
-import { startElevenLabsVoiceSession, type ElevenLabsClientTools } from "@/lib/elevenlabs-session";
+import { type ElevenLabsClientTools, type VoicePhase } from "@/lib/elevenlabs-session";
+import { usePicnicVoiceConversation } from "./usePicnicVoiceConversation";
 
 export type ChatMessage = { role: "assistant" | "user"; text: string };
 
 const DEFAULT_AGENT_GREETING = "Hi! I'm your Picnic assistant. How can I help with your cart today?";
 
-export default function VoiceChatView({
+function getStatusLabel(phase: VoicePhase, isMuted: boolean) {
+  if (phase === "bootstrapping") {
+    return "Preparing voice...";
+  }
+  if (phase === "connecting") {
+    return "Connecting...";
+  }
+  if (phase === "speaking") {
+    return "Nici is speaking";
+  }
+  if (phase === "error") {
+    return "Connection failed";
+  }
+  return isMuted ? "Mic muted" : "Listening";
+}
+
+function VoiceChatViewInner({
   messages,
   setMessages,
   onClose,
@@ -27,251 +44,50 @@ export default function VoiceChatView({
   clientTools: ElevenLabsClientTools;
   onAction: (action: string) => void;
 }) {
-  const [phase, setPhase] = useState<"connecting" | "listening" | "speaking">("connecting");
-  const [isMuted, setIsMuted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const conversationRef = useRef<VoiceConversation | null>(null);
-  const cancelledRef = useRef(false);
-  const connectingRef = useRef(false);
-  const manualCloseRef = useRef(false);
-  const phaseRef = useRef<"connecting" | "listening" | "speaking">("connecting");
-  const pendingActionRef = useRef<string | null>(null);
-  const handledAgentReplyRef = useRef(false);
-  const skippedGreetingRef = useRef(false);
   const messagesRef = useRef(messages);
-  const onActionRef = useRef(onAction);
-  const cartSummaryRef = useRef(cartSummary);
-  const agentContextRef = useRef(agentContext);
-  const startConversationRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     messagesRef.current = messages;
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
-    onActionRef.current = onAction;
-    cartSummaryRef.current = cartSummary;
-    agentContextRef.current = agentContext;
-  }, [agentContext, onAction, cartSummary]);
-
-  useEffect(() => {
-    const conversation = conversationRef.current;
-    if (!conversation) {
-      return;
-    }
-    conversation.sendContextualUpdate(agentContext);
-  }, [agentContext]);
-
-  const appendMessage = useCallback((next: ChatMessage) => {
+  const appendMessage = useCallback((role: ChatMessage["role"], text: string) => {
     setMessages((prev) => {
       const last = prev.at(-1);
-      if (last?.role === next.role && last.text === next.text) {
+      if (last?.role === role && last.text === text) {
         return prev;
       }
-      return [...prev, next];
+      return [...prev, { role, text }];
     });
   }, [setMessages]);
 
-  const endConversation = useCallback(async () => {
-    const conversation = conversationRef.current;
-    conversationRef.current = null;
-    connectingRef.current = false;
-    if (!conversation) {
-      return;
-    }
-    try {
-      await conversation.endSession();
-    } catch (error) {
-      console.error("Failed to end ElevenLabs session:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    cancelledRef.current = false;
-    manualCloseRef.current = false;
-    connectingRef.current = false;
-    pendingActionRef.current = null;
-    handledAgentReplyRef.current = false;
-    skippedGreetingRef.current = false;
-    setIsMuted(false);
-
-    const finishPendingAction = () => {
-      const action = pendingActionRef.current;
-      if (!action) {
-        return;
-      }
-      pendingActionRef.current = null;
-      onActionRef.current(action);
-    };
-
-    const detectAction = async (message: string) => {
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, cartSummary: cartSummaryRef.current }),
-        });
-        if (!res.ok) {
-          return;
-        }
-        const data = await res.json();
-        if (data.action) {
-          pendingActionRef.current = data.action;
-          if (handledAgentReplyRef.current && phaseRef.current !== "speaking") {
-            finishPendingAction();
-          }
-        }
-      } catch (error) {
-        console.error("Failed to infer cart action:", error);
-      }
-    };
-
-    const startConversation = async () => {
-      if (cancelledRef.current || connectingRef.current || conversationRef.current) {
-        return;
-      }
-
-      connectingRef.current = true;
-      setPhase("connecting");
-      phaseRef.current = "connecting";
-
-      try {
-        const conversation = (await startElevenLabsVoiceSession({
-          clientTools,
-          onConnect: () => {
-            if (cancelledRef.current) {
-              return;
-            }
-            connectingRef.current = false;
-            phaseRef.current = "listening";
-            setPhase("listening");
-          },
-          onDisconnect: () => {
-            conversationRef.current = null;
-            connectingRef.current = false;
-            if (!cancelledRef.current && !manualCloseRef.current) {
-              phaseRef.current = "connecting";
-              setPhase("connecting");
-              appendMessage({
-                role: "assistant",
-                text: "The voice session ended. Tap the mic to reconnect.",
-              });
-            }
-            manualCloseRef.current = false;
-          },
-          onModeChange: ({ mode }) => {
-            if (cancelledRef.current) {
-              return;
-            }
-            const nextPhase = mode === "speaking" ? "speaking" : "listening";
-            phaseRef.current = nextPhase;
-            setPhase(nextPhase);
-            if (mode !== "speaking" && handledAgentReplyRef.current && pendingActionRef.current) {
-              finishPendingAction();
-            }
-          },
-          onMessage: ({ message, role }) => {
-            if (cancelledRef.current) {
-              return;
-            }
-
-            if (role === "user") {
-              handledAgentReplyRef.current = false;
-              appendMessage({ role: "user", text: message });
-              void detectAction(message);
-              return;
-            }
-
-            if (
-              role === "agent" &&
-              !skippedGreetingRef.current &&
-              message === DEFAULT_AGENT_GREETING &&
-              messagesRef.current.some((entry) => entry.role === "assistant")
-            ) {
-              skippedGreetingRef.current = true;
-              return;
-            }
-
-            if (role === "agent") {
-              handledAgentReplyRef.current = true;
-              appendMessage({ role: "assistant", text: message });
-            }
-          },
-          onError: (message) => {
-            console.error("ElevenLabs error:", message);
-            if (!cancelledRef.current) {
-              appendMessage({
-                role: "assistant",
-                text: "I couldn't start the voice session. Tap the mic to try again.",
-              });
-              phaseRef.current = "connecting";
-              setPhase("connecting");
-            }
-          },
-        })) as VoiceConversation;
-
-        if (cancelledRef.current) {
-          connectingRef.current = false;
-          try {
-            await conversation.endSession();
-          } catch (error) {
-            console.error("Failed to close cancelled ElevenLabs session:", error);
-          }
-          return;
-        }
-
-        conversationRef.current = conversation;
-        conversation.sendContextualUpdate(agentContextRef.current);
-        conversation.setMicMuted(false);
-      } catch (error) {
-        connectingRef.current = false;
-        console.error("Failed to start ElevenLabs session:", error);
-        if (!cancelledRef.current) {
-          appendMessage({
-            role: "assistant",
-            text: "I couldn't start the voice session. Tap the mic to try again.",
-          });
-          phaseRef.current = "connecting";
-          setPhase("connecting");
-        }
-      }
-    };
-
-    startConversationRef.current = startConversation;
-    const timer = setTimeout(() => {
-      void startConversation();
-    }, 50);
-
-    return () => {
-      cancelledRef.current = true;
-      startConversationRef.current = null;
-      clearTimeout(timer);
-      manualCloseRef.current = true;
-      void endConversation();
-    };
-  }, [appendMessage, clientTools, endConversation]);
+  const { phase, errorMessage, isMuted, setMuted, retryVoiceSession, stopVoiceSession } = usePicnicVoiceConversation({
+    cartSummary,
+    agentContext,
+    clientTools,
+    appendMessage,
+    onAction,
+    shouldIgnoreAgentMessage: (message) =>
+      message === DEFAULT_AGENT_GREETING && messagesRef.current.some((entry) => entry.role === "assistant"),
+  });
 
   const handleClose = () => {
-    cancelledRef.current = true;
-    manualCloseRef.current = true;
-    void endConversation();
+    stopVoiceSession();
     onClose();
   };
 
   const handleMicTap = () => {
-    if (!conversationRef.current) {
-      void startConversationRef.current?.();
+    if (phase === "error") {
+      void retryVoiceSession();
       return;
     }
 
-    const nextMuted = !isMuted;
-    try {
-      conversationRef.current.setMicMuted(nextMuted);
-    } catch (error) {
-      console.error("Failed to update mic mute state:", error);
+    if (phase === "bootstrapping" || phase === "connecting") {
+      return;
     }
-    setIsMuted(nextMuted);
+
+    setMuted(!isMuted);
   };
 
   return (
@@ -314,21 +130,23 @@ export default function VoiceChatView({
 
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto pb-10 pt-4 flex flex-col items-center bg-gradient-to-t from-pink-100 via-pink-50/80 to-transparent pointer-events-none">
         <div className="mb-3 text-xs font-medium uppercase tracking-wider text-red-700/80 pointer-events-none">
-          {phase === "connecting" ? "Connecting..." : phase === "speaking" ? "Nici is speaking" : isMuted ? "Mic muted" : "Listening"}
+          {getStatusLabel(phase, isMuted)}
         </div>
         <div className="relative pointer-events-auto">
           <motion.div
             animate={
               phase === "listening" && !isMuted
                 ? { scale: [1, 1.25, 1], opacity: [0.4, 0.7, 0.4] }
-                : phase === "connecting"
+                : phase === "bootstrapping" || phase === "connecting"
                   ? { rotate: 360 }
-                  : { scale: [1, 1.08, 1] }
+                  : phase === "error"
+                    ? { scale: 1, opacity: 0.25 }
+                    : { scale: [1, 1.08, 1] }
             }
             transition={{
               repeat: Infinity,
-              duration: phase === "connecting" ? 1.5 : 2,
-              ease: phase === "connecting" ? "linear" : "easeInOut",
+              duration: phase === "bootstrapping" || phase === "connecting" ? 1.5 : 2,
+              ease: phase === "bootstrapping" || phase === "connecting" ? "linear" : "easeInOut",
             }}
             className="absolute inset-0 bg-red-500 rounded-full blur-xl opacity-50"
           />
@@ -336,14 +154,44 @@ export default function VoiceChatView({
             whileTap={{ scale: 0.95 }}
             onClick={handleMicTap}
             className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-xl border-4 border-white ${
-              isMuted ? "bg-gray-500" : "bg-red-500"
+              phase === "error" ? "bg-red-700" : isMuted ? "bg-gray-500" : "bg-red-500"
             }`}
-            aria-label={isMuted ? "Unmute microphone" : "Mute microphone"}
+            aria-label={phase === "error" ? "Retry voice session" : isMuted ? "Unmute microphone" : "Mute microphone"}
           >
-            {isMuted ? <MicOff size={26} className="text-white" /> : <Mic size={26} className="text-white" />}
+            {phase === "error" ? (
+              <Mic size={26} className="text-white" />
+            ) : isMuted ? (
+              <MicOff size={26} className="text-white" />
+            ) : (
+              <Mic size={26} className="text-white" />
+            )}
           </motion.button>
         </div>
+        {phase === "error" && errorMessage && (
+          <button
+            onClick={() => void retryVoiceSession()}
+            className="pointer-events-auto mt-4 rounded-full bg-white px-4 py-2 text-sm font-semibold text-red-700 shadow-sm"
+          >
+            Retry voice
+          </button>
+        )}
       </div>
     </div>
+  );
+}
+
+export default function VoiceChatView(props: {
+  messages: ChatMessage[];
+  setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  onClose: () => void;
+  cartSummary: string;
+  agentContext: string;
+  clientTools: ElevenLabsClientTools;
+  onAction: (action: string) => void;
+}) {
+  return (
+    <ConversationProvider>
+      <VoiceChatViewInner {...props} />
+    </ConversationProvider>
   );
 }

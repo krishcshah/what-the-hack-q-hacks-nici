@@ -9,10 +9,12 @@ export default function HomeView({
   cartState,
   onGoToCart,
   onMicClick,
+  voiceError,
 }: {
   cartState: CartState;
   onGoToCart: () => void;
   onMicClick: () => void;
+  voiceError: string | null;
 }) {
   const allItems = cartState.categories.flatMap((category) => category.items);
   const previewItems = allItems.slice(0, 3);
@@ -29,6 +31,12 @@ export default function HomeView({
         </div>
         <h1 className="text-2xl font-semibold text-gray-800 text-center max-w-[250px]">Hey, how can I help you today?</h1>
       </div>
+
+      {voiceError && (
+        <div className="mb-6 max-w-sm rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-700 shadow-sm">
+          {voiceError}
+        </div>
+      )}
 
       <motion.button
         whileHover={{ scale: 1.05 }}

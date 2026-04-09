@@ -16,6 +16,7 @@ export default function HomePage() {
     openHomeVoice,
     closeHomeVoice,
     isHomeVoiceActive,
+    voiceError,
     messages,
     setMessages,
   } =
@@ -35,5 +36,5 @@ export default function HomePage() {
     );
   }
 
-  return <HomeView cartState={cartState} onGoToCart={() => router.push("/cart")} onMicClick={openHomeVoice} />;
+  return <HomeView cartState={cartState} onGoToCart={() => router.push("/cart")} onMicClick={openHomeVoice} voiceError={voiceError} />;
 }
