@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mic } from 'lucide-react';
+import { CartState } from '../types';
 
 export default function GlobalVoiceAgent({ 
   isActive, 
   onClose, 
-  cartSummary,
+  cartState,
   onAction 
 }: { 
   isActive: boolean; 
   onClose: () => void;
-  cartSummary: string;
-  onAction: (action: string) => void;
+  cartState: CartState;
+  onAction: (action: any) => void;
 }) {
   const [phase, setPhase] = useState<'listening' | 'processing' | 'speaking'>('listening');
   const [transcript, setTranscript] = useState('');
@@ -68,29 +69,59 @@ export default function GlobalVoiceAgent({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           message: text,
-          cartSummary
+          cartState
         })
       });
       const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Failed to connect to the server.");
+      }
       
       setPhase('speaking');
-      setReply(data.reply || "Okay, I've made the requested changes.");
+      const responseText = data.reply || "Okay, I've made the requested changes.";
+      setReply(responseText);
       
-      const utterance = new SpeechSynthesisUtterance(data.reply || "Okay, I've made the requested changes.");
-      utterance.onend = () => {
-        setTimeout(() => {
-          onClose();
-          if (data.action) {
-            onAction(data.action);
-          }
-        }, 500);
-      };
-      window.speechSynthesis.speak(utterance);
+      try {
+        const ttsResponse = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: responseText })
+        });
+        
+        if (!ttsResponse.ok) throw new Error('TTS API failed');
+        
+        const blob = await ttsResponse.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        
+        audio.onended = () => {
+          setTimeout(() => {
+            onClose();
+            if (data.action) {
+              onAction(data.action);
+            }
+          }, 500);
+        };
+        
+        audio.play();
+      } catch (e) {
+        console.error("TTS API failed, falling back to browser TTS", e);
+        const utterance = new SpeechSynthesisUtterance(responseText);
+        utterance.onend = () => {
+          setTimeout(() => {
+            onClose();
+            if (data.action) {
+              onAction(data.action);
+            }
+          }, 500);
+        };
+        window.speechSynthesis.speak(utterance);
+      }
 
-    } catch (e) {
+    } catch (e: any) {
       setPhase('speaking');
-      setReply("Sorry, I couldn't connect to the server.");
-      setTimeout(onClose, 2000);
+      setReply(e.message || "Sorry, I couldn't connect to the server.");
+      setTimeout(onClose, 4000);
     }
   };
 

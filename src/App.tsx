@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
 import HomeView from './components/HomeView';
 import CartView from './components/CartView';
@@ -14,10 +14,14 @@ import GlobalVoiceAgent from './components/GlobalVoiceAgent';
 import CameraScanner from './components/CameraScanner';
 import MinOrderLoader from './components/MinOrderLoader';
 import HamburgerLoader from './components/HamburgerLoader';
+import Onboarding from './components/Onboarding';
 import { generateMockCart, applyAdjustment } from './data';
 import { CartState, CartCategory } from './types';
 
 export default function App() {
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
+    return localStorage.getItem('onboardingComplete') === 'true';
+  });
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState('home');
   const [cartCategories, setCartCategories] = useState<CartCategory[]>(generateMockCart());
@@ -52,6 +56,18 @@ export default function App() {
     setIsAdjusting(true);
   };
 
+  const handleVoiceAction = (action: any) => {
+    if (typeof action === 'string') {
+      handleAdjust(action);
+    } else if (action && action.type === 'preset') {
+      handleAdjust(action.payload);
+    } else if (action && action.type === 'update_cart') {
+      setPendingCategories(action.payload);
+      setAdjustmentType('custom');
+      setIsAdjusting(true);
+    }
+  };
+
   const handleCameraComplete = () => {
     setIsCameraActive(false);
     const newCat = applyAdjustment(cartCategories, 'duplicate');
@@ -69,6 +85,15 @@ export default function App() {
     setPendingCategories(null);
   };
 
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('onboardingComplete', 'true');
+    setHasCompletedOnboarding(true);
+  };
+
+  if (!hasCompletedOnboarding) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
+
   return (
     <div className="font-sans text-gray-900 antialiased selection:bg-red-100 selection:text-red-900 max-w-md mx-auto relative bg-white shadow-2xl min-h-screen">
       {isInitialLoading && (
@@ -80,8 +105,8 @@ export default function App() {
           <GlobalVoiceAgent 
             isActive={isVoiceActive} 
             onClose={() => setIsVoiceActive(false)}
-            cartSummary={`${cartState.itemCount} items, total €${cartState.totalPrice.toFixed(2)}`}
-            onAction={handleAdjust}
+            cartState={cartState}
+            onAction={handleVoiceAction}
           />
         )}
         {isCameraActive && (

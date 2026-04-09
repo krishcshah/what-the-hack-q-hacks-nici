@@ -4,23 +4,34 @@ import { Loader2, CheckCircle2 } from 'lucide-react';
 import { CartState } from '../types';
 
 const steps = [
-  { text: "Analyzing chats...", duration: 3500 },
+  { text: "Analyzing order history...", duration: 3500 },
   { text: "Analyzing calendar...", duration: 4000 },
   { text: "Selecting recipes...", duration: 1500 },
   { text: "Collecting items...", duration: 1500 },
   { text: "Organizing cart...", duration: 1500 }
 ];
 
-const ChatAnimation = () => (
-  <div className="w-full h-40 bg-gray-50 rounded-xl border border-gray-100 p-3 flex flex-col gap-2 overflow-hidden relative">
-    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="bg-white p-2 rounded-lg rounded-tl-none shadow-sm text-xs self-start max-w-[80%] text-left">
-      Hey, let's do homemade pizza on Friday! 🍕
-    </motion.div>
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.2 }} className="bg-red-500 text-white p-2 rounded-lg rounded-tr-none shadow-sm text-xs self-end max-w-[80%] text-left">
-      Sounds great! I'll get the ingredients.
-    </motion.div>
-    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 2.2 }} className="bg-white p-2 rounded-lg rounded-tl-none shadow-sm text-xs self-start max-w-[80%] text-left">
-      Also we're out of milk and eggs.
+const OrderHistoryAnimation = () => (
+  <div className="w-full h-40 bg-gray-50 rounded-xl border border-gray-100 p-3 overflow-hidden relative flex flex-col gap-2">
+    <motion.div 
+      animate={{ y: [0, -120] }} 
+      transition={{ duration: 3.5, ease: "linear" }} 
+      className="flex flex-col gap-2 w-full"
+    >
+      {[
+        { name: "Organic Milk 1L", price: "€1.49" },
+        { name: "Free-range Eggs", price: "€3.29" },
+        { name: "Whole Wheat Bread", price: "€2.19" },
+        { name: "Gouda Cheese", price: "€4.50" },
+        { name: "Toilet Paper", price: "€4.99" },
+        { name: "Dish Soap", price: "€2.49" },
+        { name: "Sparkling Water", price: "€0.99" },
+      ].map((item, i) => (
+        <div key={i} className="bg-white p-2 rounded-lg shadow-sm text-xs flex justify-between w-full border border-gray-100">
+          <span className="font-medium text-gray-700">{item.name}</span>
+          <span className="text-gray-500">{item.price}</span>
+        </div>
+      ))}
     </motion.div>
     
     <motion.div 
@@ -105,7 +116,7 @@ export default function InitialLoader({ cartState, onComplete }: { cartState: Ca
                 exit={{ opacity: 0, y: -10 }}
                 className="w-full flex flex-col items-center gap-4"
               >
-                {stepIndex === 0 && <ChatAnimation />}
+                {stepIndex === 0 && <OrderHistoryAnimation />}
                 {stepIndex === 1 && <CalendarAnimation />}
                 <div className="text-xl font-semibold text-gray-700">
                   {steps[stepIndex]?.text || "Finishing up..."}
