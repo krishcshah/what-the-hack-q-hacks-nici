@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: light;
+  font-family: "Avenir Next", "SF Pro Display", "Segoe UI", sans-serif;
+  background: #fffaf7;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at top, rgba(255, 221, 229, 0.55), transparent 30%),
+    linear-gradient(180deg, #fffaf7 0%, #f7f5f2 100%);
+}
+
+button {
+  font: inherit;
+}
+
 @layer utilities {
   .scrollbar-hide {
     /* IE and Edge */
@@ -14,4 +32,3 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
-

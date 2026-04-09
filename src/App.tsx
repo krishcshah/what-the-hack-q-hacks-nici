@@ -95,7 +95,7 @@ export default function App() {
   }
 
   return (
-    <div className="font-sans text-gray-900 antialiased selection:bg-red-100 selection:text-red-900 max-w-md mx-auto relative bg-white shadow-2xl min-h-screen">
+    <div className="font-sans text-gray-900 antialiased selection:bg-red-100 selection:text-red-900 max-w-md mx-auto relative min-h-screen overflow-hidden bg-[#fffaf7] shadow-[0_32px_90px_rgba(15,23,42,0.18)]">
       {isInitialLoading && (
         <InitialLoader cartState={cartState} onComplete={() => setIsInitialLoading(false)} />
       )}
@@ -139,6 +139,7 @@ export default function App() {
             cartState={cartState} 
             onGoToCart={() => setCurrentTab('cart')} 
             onMicClick={() => setIsVoiceActive(true)}
+            onQuickAction={handleAdjust}
           />
         )}
         {currentTab === 'cart' && (
@@ -149,7 +150,7 @@ export default function App() {
           />
         )}
         
-        <Navigation currentTab={currentTab} setTab={setCurrentTab} />
+        <Navigation currentTab={currentTab} setTab={setCurrentTab} basketCount={cartState.itemCount} />
       </div>
     </div>
   );
