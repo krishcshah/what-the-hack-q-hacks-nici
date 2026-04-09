@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mic, Settings2, Leaf, DollarSign, ChefHat, Plus, Trash, Camera, Check, Clock } from 'lucide-react';
+import { Mic, Settings2, Leaf, DollarSign, ChefHat, Plus, Trash, Camera, Check, Clock, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CartState } from '../types';
 
@@ -90,30 +90,62 @@ export default function CartView({ cartState, onAdjust, onMicClick }: { cartStat
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] pb-40 pt-6 px-4">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6 px-2 tracking-tight">Your Cart</h1>
+    <div className="min-h-screen bg-white pb-40 pt-6 px-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6 px-2">
+        <button className="text-sm text-gray-600 font-medium">Back</button>
+        <h1 className="text-lg font-semibold text-black">Shopping Cart</h1>
+        <div className="w-8"></div> {/* Spacer for centering */}
+      </div>
 
-      <div className="space-y-6">
+      {/* Delivery Summary Card */}
+      <div className="w-full bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between shadow-sm mb-8">
+        <div className="flex flex-col items-center justify-center w-1/2">
+          <div className="font-bold text-2xl text-black">
+            {cartState.totalPrice.toFixed(2).replace('.', ',')} €
+          </div>
+          <div className="text-sm text-gray-500">{cartState.itemCount} items</div>
+        </div>
+
+        <div className="w-px h-12 bg-gray-200"></div>
+
+        <div className="flex flex-col items-center justify-center w-1/2">
+          <span className="text-sm font-medium text-black mb-1">8. April</span>
+          <span className="text-lg font-medium text-green-600">17:00 - 18:00</span>
+        </div>
+      </div>
+
+      <div className="space-y-8">
         {cartState.categories.map((category) => (
-          <div key={category.id} className={`rounded-[32px] p-5 border ${category.color} shadow-sm`}>
-            <h2 className="text-lg font-bold mb-4 tracking-tight">{category.title}</h2>
-            <div className="space-y-3">
-              {category.items.map((item) => (
-                <div key={item.id} className="flex items-center bg-white/70 rounded-2xl p-3 backdrop-blur-md border border-white/50">
-                  <img src={item.image} alt={item.name} className="w-14 h-14 rounded-xl object-cover mr-4 shadow-sm" />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-sm leading-tight">{item.name}</h3>
-                    <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                      {item.isVegan && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">Vegan</span>}
-                      {item.isEco && <span className="text-[10px] bg-teal-100 text-teal-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">Eco</span>}
+          <div key={category.id} className="px-2">
+            <h2 className="text-2xl font-bold mb-4 text-black">{category.title}</h2>
+            <div className="space-y-0">
+              {category.items.map((item, index) => (
+                <div key={item.id}>
+                  <div className="flex items-start py-4">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-sm text-black mr-4 shrink-0 mt-1">
+                      1
+                    </div>
+                    <img src={item.image} alt={item.name} className="w-12 h-12 object-contain mr-4 shrink-0 mt-1" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-800 text-[15px] leading-tight mb-1">{item.name}</h3>
+                      <div className="text-sm text-gray-500 mb-1">
+                        {item.name.includes('Quark') ? '185g' : item.name.includes('Trauben') ? '500g' : '32 Stück'}
+                      </div>
+                      <div className="inline-block bg-[#ffe800] text-black text-xs font-bold px-2 py-0.5 rounded">
+                        {item.name.includes('Grill') ? '10% Rabatt' : `jetzt ${item.price.toFixed(2).replace('.', ',')}€`}
+                      </div>
+                    </div>
+                    <div className="text-right ml-2 flex flex-col items-end shrink-0">
+                      <div className="text-sm text-gray-400 line-through mb-0.5">
+                        {(item.price + 0.6).toFixed(2).replace('.', ',')}
+                      </div>
+                      <div className="font-bold text-[#c00020] text-lg">
+                        {item.price.toFixed(2).replace('.', ',')}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right ml-2 flex flex-col items-end justify-between h-14">
-                    <div className="font-bold text-gray-900">€{item.price.toFixed(2)}</div>
-                    <button className="text-gray-400 hover:text-red-500 transition-colors">
-                      <Trash size={16} />
-                    </button>
-                  </div>
+                  {index < category.items.length - 1 && <div className="h-px bg-gray-100 w-full ml-12"></div>}
                 </div>
               ))}
             </div>
@@ -121,9 +153,38 @@ export default function CartView({ cartState, onAdjust, onMicClick }: { cartStat
         ))}
       </div>
 
+      {/* Order Summary */}
+      <div className="mt-8 px-2 space-y-4">
+        <div className="flex justify-between text-[#c00020] font-medium text-[15px]">
+          <span>Gespart</span>
+          <span>-1,08</span>
+        </div>
+        <div className="flex justify-between text-black font-medium text-[15px]">
+          <span>Gesamtbetrag</span>
+          <span>{cartState.totalPrice.toFixed(2).replace('.', ',')}</span>
+        </div>
+        
+        <div className="border-t border-dashed border-gray-300 my-4"></div>
+        
+        <div className="flex justify-between text-green-600 font-medium text-[15px]">
+          <span>Lieferung</span>
+          <span>Immer gratis</span>
+        </div>
+        
+        <div className="border-t border-dashed border-gray-300 my-4"></div>
+        
+        <div className="flex justify-between items-end">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-bold text-black">Endsumme</span>
+            <span className="text-xs text-gray-500">(Inkl. MwSt.)</span>
+          </div>
+          <span className="text-xl font-bold text-black">{cartState.totalPrice.toFixed(2).replace('.', ',')}</span>
+        </div>
+      </div>
+
       {/* Floating Action Buttons */}
       <div className="fixed bottom-20 left-0 right-0 px-4 flex flex-col items-center space-y-3 z-40 pointer-events-none">
-        <div className="w-full max-w-md pointer-events-auto flex flex-col items-end">
+        <div className="w-full max-w-md pointer-events-auto flex flex-col items-center">
           
           {/* Adjust Cart Pill */}
           <AnimatePresence>
@@ -162,46 +223,26 @@ export default function CartView({ cartState, onAdjust, onMicClick }: { cartStat
             )}
           </AnimatePresence>
 
-          <div className="flex w-full gap-3">
-            {/* Adjust Button */}
-            <div className="flex-[1.2] flex bg-white rounded-full shadow-xl shadow-black/5 border border-gray-200 overflow-hidden h-14">
-              <button 
-                onClick={() => setIsAdjustExpanded(!isAdjustExpanded)}
-                className="flex-1 flex items-center justify-center font-bold text-gray-800 hover:bg-gray-50 transition-colors px-4 text-sm"
-              >
-                <Settings2 size={18} className="mr-2 text-gray-500" />
-                Adjust Cart
-              </button>
-              <div className="w-[1px] bg-gray-100 my-2"></div>
-              <button onClick={onMicClick} className="w-16 flex items-center justify-center hover:bg-gray-50 transition-colors">
-                <Mic size={22} className="text-red-500" />
-              </button>
-            </div>
-
-            {/* Confirm and Pay */}
+          {/* Quick Adjustments Pill */}
+          <div className="flex bg-white rounded-full shadow-xl shadow-black/10 border border-gray-100 overflow-hidden h-14 mb-4 w-64">
+            <button onClick={onMicClick} className="w-14 bg-[#c00020] flex items-center justify-center hover:bg-[#a0001a] transition-colors rounded-full m-1 shrink-0">
+              <Mic size={20} className="text-white" />
+            </button>
             <button 
-              onClick={() => setIsPaid(true)}
-              className="flex-1 bg-red-500 text-white rounded-full shadow-xl shadow-red-500/30 font-bold flex items-center justify-center h-14 hover:bg-red-600 active:bg-red-700 transition-colors text-sm relative"
+              onClick={() => setIsAdjustExpanded(!isAdjustExpanded)}
+              className="flex-1 flex items-center justify-center font-medium text-gray-600 hover:bg-gray-50 transition-colors text-[15px]"
             >
-              <div className="absolute -top-2 -left-2 bg-blue-500 text-white text-[10px] w-6 h-6 rounded-full flex items-center justify-center font-bold border-2 border-white shadow-sm">
-                {cartState.itemCount}
-              </div>
-              {showSlash ? (
-                <div className="flex items-center gap-2">
-                  <span className="line-through text-white/60">€{prevPrice.toFixed(2)}</span>
-                  <motion.span 
-                    initial={{ scale: 1.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="text-green-300"
-                  >
-                    €{cartState.totalPrice.toFixed(2)}
-                  </motion.span>
-                </div>
-              ) : (
-                <span>Pay €{cartState.totalPrice.toFixed(2)}</span>
-              )}
+              Quick Adjustments <Zap size={16} className="ml-2 text-gray-400" />
             </button>
           </div>
+
+          {/* Confirm Order Button */}
+          <button 
+            onClick={() => setIsPaid(true)}
+            className="w-full bg-[#c00020] text-white rounded-xl shadow-md font-semibold flex items-center justify-center h-14 hover:bg-[#a0001a] active:bg-[#800015] transition-colors text-lg"
+          >
+            Confirm Order
+          </button>
         </div>
       </div>
     </div>
